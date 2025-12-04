@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kira & Gerak - Matematik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #fff7ed; 
+            overflow: hidden; 
+            transition: background-color 0.5s ease;
+        }
+
+        .bubble { animation: float 3s infinite ease-in-out; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .timer-bar { transition: width 1s linear; }
+
+        .damage-flash { animation: flashRed 0.4s ease-out; }
+        @keyframes flashRed {
+            0% { background-color: rgba(220, 38, 38, 0.7); }
+            100% { background-color: transparent; }
+        }
+
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-10px, 0, 0); }
+            20%, 80% { transform: translate3d(15px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-20px, 0, 0); }
+            40%, 60% { transform: translate3d(20px, 0, 0); }
+        }
+
+        /* Custom Slider Styling */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+            background: #6b7280; cursor: pointer; margin-top: -10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px; cursor: pointer; background: #e5e7eb; border-radius: 5px;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center relative">
+
+    <div id="effects-overlay" class="absolute inset-0 z-30 pointer-events-none"></div>
+    <div id="damage-overlay" class="absolute inset-0 z-50 pointer-events-none"></div>
+
+    <div id="feedback-text" class="absolute inset-0 z-40 flex items-center justify-center pointer-events-none hidden">
+        <h1 class="text-9xl font-black text-white drop-shadow-lg stroke-black" style="-webkit-text-stroke: 4px black;">
+            BETUL!
+        </h1>
+    </div>
+
+    <!-- Setup / Menu Screen -->
+    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-95 p-4 text-center overflow-y-auto">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full border-4 border-gray-300 my-4" id="menu-card">
+            <h1 class="text-3xl font-black text-gray-700 mb-1" id="game-title">Kira & Gerak!</h1>
+            <p class="text-gray-500 mb-4 text-sm">Pilih operasi di bawah:</p>
+            
+            <!-- 1. Operation Selection -->
+            <div class="mb-4 grid grid-cols-4 gap-2">
+                <button onclick="selectOperation('add')" id="op-add" class="op-btn bg-orange-500 text-white p-3 rounded-xl shadow-lg transform hover:scale-105 transition border-b-4 border-orange-700">
+                    <i class="fas fa-plus text-2xl"></i>
+                </button>
+                <button onclick="selectOperation('subtract')" id="op-subtract" class="op-btn bg-red-500 text-white p-3 rounded-xl shadow-lg transform hover:scale-105 transition border-b-4 border-red-700 opacity-50">
+                    <i class="fas fa-minus text-2xl"></i>
+                </button>
+                <button onclick="selectOperation('multiply')" id="op-multiply" class="op-btn bg-blue-500 text-white p-3 rounded-xl shadow-lg transform hover:scale-105 transition border-b-4 border-blue-700 opacity-50">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+                <button onclick="selectOperation('divide')" id="op-divide" class="op-btn bg-pink-500 text-white p-3 rounded-xl shadow-lg transform hover:scale-105 transition border-b-4 border-pink-700 opacity-50">
+                    <i class="fas fa-divide text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- 2. Level Selection -->
+            <div class="mb-4 text-left">
+                <label class="text-gray-500 font-bold mb-1 text-sm block">Tahap Kesukaran:</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="selectMathLevel(1)" id="lvl-1" class="level-btn bg-green-500 text-white py-2 px-1 rounded-xl font-bold ring-4 ring-green-300 shadow-md text-sm">
+                        <span class="block">Tahap 1</span>
+                        <span id="lvl-desc-1" class="text-[10px] font-normal opacity-90">Mudah</span>
+                    </button>
+                    <button onclick="selectMathLevel(2)" id="lvl-2" class="level-btn bg-yellow-400 text-white py-2 px-1 rounded-xl font-bold opacity-70 shadow-md text-sm">
+                        <span class="block">Tahap 2</span>
+                        <span id="lvl-desc-2" class="text-[10px] font-normal opacity-90">Sederhana</span>
+                    </button>
+                    <button onclick="selectMathLevel(3)" id="lvl-3" class="level-btn bg-red-500 text-white py-2 px-1 rounded-xl font-bold opacity-70 shadow-md text-sm">
+                        <span class="block">Tahap 3</span>
+                        <span id="lvl-desc-3" class="text-[10px] font-normal opacity-90">Sukar</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Sliders (Speed & Frequency) -->
+            <div class="mb-4 text-left bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <label class="text-gray-400 font-bold mb-2 text-xs block border-b pb-1">Tetapan Cikgu:</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-[10px] text-gray-500 font-bold">Kelajuan</span>
+                        <input type="range" id="speed-slider" min="1" max="6" value="2" step="0.5" class="w-full h-2">
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-500 font-bold">Kekerapan</span>
+                        <input type="range" id="spawn-slider" min="1" max="10" value="3" step="1" class="w-full h-2">
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-gray-500 font-bold mb-2 text-sm">Mula Main:</p>
+            <div class="grid grid-cols-2 gap-4 w-full">
+                <button onclick="startGame('individual')" class="bg-gray-700 hover:bg-gray-800 text-white text-lg font-bold py-3 px-4 rounded-2xl shadow-lg transform transition hover:scale-105 flex flex-col items-center">
+                    <i class="fas fa-hand-pointer text-2xl mb-1"></i>
+                    <span>INDIVIDU</span>
+                </button>
+                <button onclick="startGame('class')" class="bg-gray-700 hover:bg-gray-800 text-white text-lg font-bold py-3 px-4 rounded-2xl shadow-lg transform transition hover:scale-105 flex flex-col items-center">
+                    <i class="fas fa-users text-2xl mb-1"></i>
+                    <span>KELAS</span>
+                </button>
+            </div>
+            <a href="index.html" class="block mt-4 text-gray-400 text-xs hover:text-gray-600 font-bold"><i class="fas fa-arrow-left mr-1"></i> Kembali ke Menu Utama</a>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80 p-4 text-center">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-lg w-full border-4 border-yellow-400 animate-bounce">
+            <h1 id="go-title" class="text-5xl font-black text-orange-600 mb-4">TAMAT!</h1>
+            
+            <div id="go-score-section">
+                <p class="text-gray-500 text-xl">Markah Akhir:</p>
+                <div id="final-score" class="text-8xl font-black text-yellow-500 my-4">0</div>
+            </div>
+
+            <div class="flex gap-2 justify-center mt-4">
+                <a href="index.html" class="bg-gray-500 hover:bg-gray-600 text-white text-lg font-bold py-3 px-6 rounded-full shadow-lg">
+                    <i class="fas fa-home"></i> Menu
+                </a>
+                <button onclick="location.reload()" class="bg-green-500 hover:bg-green-600 text-white text-lg font-bold py-3 px-6 rounded-full shadow-lg">
+                    Main Lagi <i class="fas fa-redo ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game UI -->
+    <div id="game-ui" class="absolute inset-0 z-20 pointer-events-none hidden flex flex-col justify-between p-4">
+        <!-- FIXED TOP BAR -->
+        <div class="w-full max-w-4xl mx-auto pointer-events-auto relative">
+            <div class="flex justify-between items-center mb-2 relative h-16">
+                
+                <!-- Score (Left) -->
+                <div id="score-container" class="bg-white bg-opacity-90 rounded-2xl p-2 px-4 border-4 border-gray-300 shadow-lg flex items-center gap-3 relative z-10">
+                    <span class="text-gray-600 font-bold uppercase text-sm">Markah</span>
+                    <span id="score-display" class="text-3xl font-black text-gray-800">0</span>
+                </div>
+                
+                <!-- Question Box (ABSOLUTE CENTER) -->
+                <div id="q-box" class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-gray-800 px-6 py-2 rounded-2xl shadow-lg border-4 border-gray-300 z-20 whitespace-nowrap">
+                    <span id="question-display" class="text-4xl font-black tracking-widest">SOALAN...</span>
+                </div>
+
+                <!-- Icon (Right) -->
+                <div id="status-icon" class="bg-gray-800 bg-opacity-80 text-white px-3 py-1 text-sm rounded-full relative z-10">
+                    <i class="fas fa-video"></i>
+                </div>
+            </div>
+            
+            <div class="w-full bg-gray-200 rounded-full h-6 border-2 border-white shadow-md overflow-hidden relative mt-2">
+                <div id="timer-bar" class="timer-bar bg-green-500 h-full w-full flex items-center justify-end pr-2">
+                    <span id="timer-text" class="text-xs font-bold text-white shadow-black drop-shadow-md">60s</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-end">
+            <button onclick="location.reload()" class="pointer-events-auto bg-red-500 hover:bg-red-600 text-white font-bold p-3 rounded-xl shadow-lg opacity-50 hover:opacity-100 transition">
+                <i class="fas fa-stop"></i>
+            </button>
+        </div>
+    </div>
+
+    <video id="webcam" style="position: absolute; opacity: 0; pointer-events: none; z-index: -1;" playsinline muted></video>
+    <canvas id="game-canvas" class="absolute inset-0 z-10 w-full h-full object-cover"></canvas>
+
+    <script>
+        // --- GAME CONFIGURATION ---
+        const state = {
+            score: 0,
+            level: 1, 
+            operation: 'add', // add, subtract, multiply, divide
+            mode: 'individual', 
+            timeLeft: 60,
+            maxTime: 60,
+            isPlaying: false,
+            gameSpeed: 2, 
+            spawnRate: 2000, 
+            currentQuestion: { text: "Start", ans: 0 },
+            targets: [], 
+            classOptions: [], 
+            particles: [], 
+            quizPhase: 'idle', 
+            quizEndTime: 0,
+            lastTick: 0, 
+            video: null, canvas: null, ctx: null, lastFrameData: null, lastSpawnTime: 0, lastCatchTime: 0 
+        };
+
+        // --- COLORS & THEMES ---
+        const themes = {
+            add: { color: 'bg-orange-500', border: 'border-orange-300', bgBody: '#fff7ed', text: 'text-orange-600' },
+            subtract: { color: 'bg-red-500', border: 'border-red-300', bgBody: '#fef2f2', text: 'text-red-600' },
+            multiply: { color: 'bg-blue-500', border: 'border-blue-300', bgBody: '#eff6ff', text: 'text-blue-600' },
+            divide: { color: 'bg-pink-500', border: 'border-pink-300', bgBody: '#fdf2f8', text: 'text-pink-600' }
+        };
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const playTone = (freq, type, duration) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        };
+
+        const sfx = {
+            correct: () => { playTone(600, 'sine', 0.1); setTimeout(() => playTone(800, 'sine', 0.2), 100); },
+            wrong: () => { playTone(150, 'sawtooth', 0.1); setTimeout(() => playTone(100, 'sawtooth', 0.3), 100); },
+            pop: () => playTone(400, 'triangle', 0.1),
+            tick: () => playTone(800, 'square', 0.05),
+            reveal: () => { playTone(523.25, 'sine', 0.1); setTimeout(() => playTone(659.25, 'sine', 0.1), 100); setTimeout(() => playTone(783.99, 'sine', 0.4), 200); }
+        };
+
+        // --- MATH LOGIC ---
+        function selectOperation(op) {
+            state.operation = op;
+            
+            // Visual Update Buttons
+            document.querySelectorAll('.op-btn').forEach(btn => {
+                btn.classList.add('opacity-50');
+                btn.classList.remove('ring-4', 'ring-gray-300');
+            });
+            const btn = document.getElementById('op-' + op);
+            btn.classList.remove('opacity-50');
+            btn.classList.add('ring-4', 'ring-gray-300');
+
+            // Update Theme Colors
+            const theme = themes[op];
+            document.getElementById('menu-card').className = `bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full border-4 ${theme.border} my-4`;
+            document.getElementById('game-title').className = `text-3xl font-black ${theme.text} mb-1`;
+            document.body.style.backgroundColor = theme.bgBody;
+
+            // Update Level Text
+            updateLevelDescriptions(op);
+        }
+
+        function updateLevelDescriptions(op) {
+            const descs = {
+                add: ["< 10", "< 15", "< 20"],
+                subtract: ["< 10", "< 15", "< 20"],
+                multiply: ["Sifir 0-5", "Sifir 5-9", "Sifir 0-9"], // UPDATED
+                divide: ["Bahagi 1-3", "Bahagi 1-6", "Bahagi 1-9"]
+            };
+            document.getElementById('lvl-desc-1').innerText = descs[op][0];
+            document.getElementById('lvl-desc-2').innerText = descs[op][1];
+            document.getElementById('lvl-desc-3').innerText = descs[op][2];
+        }
+
+        function generateQuestion() {
+            let max = 10;
+            if (state.level === 2) max = 15;
+            if (state.level === 3) max = 20;
+
+            let a, b, ans, text;
+
+            switch (state.operation) {
+                case 'add':
+                    ans = Math.floor(Math.random() * (max - 2)) + 2; 
+                    a = Math.floor(Math.random() * ans); 
+                    b = ans - a;
+                    text = `${a} + ${b} = ?`;
+                    break;
+                
+                case 'subtract':
+                    ans = Math.floor(Math.random() * (max/2)) + 1; 
+                    b = Math.floor(Math.random() * (max/2)) + 1;
+                    a = ans + b;
+                    text = `${a} - ${b} = ?`;
+                    break;
+
+                case 'multiply':
+                    // UPDATED MULTIPLICATION LOGIC
+                    let minA = 0;
+                    let maxA = 5;
+                    
+                    if (state.level === 1) { 
+                        minA = 0; maxA = 5; // Sifir 0-5
+                    } else if (state.level === 2) { 
+                        minA = 5; maxA = 9; // Sifir 5-9
+                    } else { 
+                        minA = 0; maxA = 9; // Sifir 0-9
+                    }
+
+                    // Random multiplier between minA and maxA
+                    a = Math.floor(Math.random() * (maxA - minA + 1)) + minA;
+                    // Multiplied by 0-9
+                    b = Math.floor(Math.random() * 10); 
+                    
+                    ans = a * b;
+                    text = `${a} × ${b} = ?`;
+                    break;
+
+                case 'divide':
+                    let divLimit = state.level === 1 ? 3 : (state.level === 2 ? 6 : 9);
+                    b = Math.floor(Math.random() * divLimit) + 1; 
+                    ans = Math.floor(Math.random() * 9) + 1; 
+                    a = b * ans; 
+                    text = `${a} ÷ ${b} = ?`;
+                    break;
+            }
+
+            return { text: text, ans: ans };
+        }
+
+        function selectMathLevel(lvl) {
+            state.level = lvl;
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-green-300', 'opacity-100');
+                btn.classList.add('opacity-70');
+            });
+            const activeBtn = document.getElementById('lvl-' + lvl);
+            activeBtn.classList.remove('opacity-70');
+            activeBtn.classList.add('opacity-100', 'ring-4', 'ring-green-300');
+        }
+
+        // --- GAME FLOW ---
+        async function startGame(mode) {
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            state.mode = mode;
+            state.score = 0;
+            state.targets = [];
+            state.particles = [];
+            
+            // Slider settings
+            state.gameSpeed = parseFloat(document.getElementById('speed-slider').value);
+            const spawnVal = parseInt(document.getElementById('spawn-slider').value);
+            state.spawnRate = 2500 - ((spawnVal - 1) * 230); 
+
+            // Theme Application for Game UI
+            const theme = themes[state.operation];
+            const qBox = document.getElementById('q-box');
+            qBox.className = `absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 ${theme.color} text-white px-6 py-2 rounded-2xl shadow-lg border-4 ${theme.border} z-20 whitespace-nowrap`;
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            
+            if (mode === 'class') {
+                document.getElementById('score-container').style.display = 'none';
+                state.timeLeft = 60; 
+            }
+
+            await setupCamera();
+            
+            state.canvas = document.getElementById('game-canvas');
+            state.ctx = state.canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            newRound();
+
+            state.isPlaying = true;
+            startTimer();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function newRound() {
+            state.currentQuestion = generateQuestion();
+            document.getElementById('question-display').innerText = state.currentQuestion.text;
+
+            if (state.mode === 'class') {
+                setupClassZones();
+            }
+        }
+
+        function setupClassZones() {
+            const correctAns = state.currentQuestion.ans;
+            
+            let opts = [correctAns];
+            while(opts.length < 3) {
+                // Generate distractors close to answer
+                let offset = Math.floor(Math.random() * 5) + 1;
+                if (Math.random() > 0.5) offset = -offset;
+                let d = correctAns + offset;
+                if (d >= 0 && !opts.includes(d)) opts.push(d);
+            }
+            opts.sort(() => Math.random() - 0.5);
+
+            state.classOptions = opts.map((val, idx) => ({
+                val: val,
+                isCorrect: val === correctAns,
+                x: 0, y: 0, w: 0, h: 0 
+            }));
+
+            state.quizPhase = 'thinking';
+            state.quizEndTime = Date.now() + 5000; 
+            state.lastTick = 6; 
+        }
+
+        function spawnBubble() {
+            const width = state.canvas.width;
+            const x = Math.random() * (width - 100) + 50;
+            const isCorrectSpawn = Math.random() < 0.4;
+            let val;
+            
+            if (isCorrectSpawn) {
+                val = state.currentQuestion.ans;
+            } else {
+                let offset = Math.floor(Math.random() * 5) + 1;
+                if(Math.random()>0.5) offset = -offset;
+                val = state.currentQuestion.ans + offset;
+                if (val < 0 || val === state.currentQuestion.ans) val = state.currentQuestion.ans + 1;
+            }
+
+            state.targets.push({
+                x: x, y: -60, val: val, radius: 50,
+                renderColor: `hsl(${Math.random()*360}, 70%, 60%)`,
+                isCorrect: val === state.currentQuestion.ans,
+                caught: false
+            });
+        }
+
+        async function setupCamera() {
+            const video = document.getElementById('webcam');
+            state.video = video;
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+            video.srcObject = stream;
+            return new Promise(r => video.onloadedmetadata = () => { video.play(); r(); });
+        }
+
+        function resizeCanvas() {
+            state.canvas.width = window.innerWidth;
+            state.canvas.height = window.innerHeight;
+        }
+
+        function detectMotion(items) {
+            if (Date.now() - state.lastCatchTime < 500) return;
+
+            if (!state.lastFrameData) {
+                const w = 64, h = 48;
+                const c = document.createElement('canvas'); c.width=w; c.height=h;
+                c.getContext('2d').drawImage(state.video,0,0,w,h);
+                state.lastFrameData = c.getContext('2d').getImageData(0,0,w,h);
+                return;
+            }
+
+            const w = 64, h = 48;
+            const tempC = document.createElement('canvas'); tempC.width=w; tempC.height=h;
+            const tCtx = tempC.getContext('2d');
+            tCtx.drawImage(state.video, 0, 0, w, h);
+            const frameData = tCtx.getImageData(0, 0, w, h);
+
+            items.forEach(item => {
+                if (item.caught) return;
+                const relX = item.x / state.canvas.width;
+                const relY = item.y / state.canvas.height;
+                const vX = Math.floor((1 - relX) * w);
+                const vY = Math.floor(relY * h);
+
+                let score = 0;
+                for(let y = vY-3; y<vY+3; y++) {
+                    for(let x = vX-3; x<vX+3; x++) {
+                        if (x>=0 && x<w && y>=0 && y<h) {
+                            const i = (y*w + x)*4;
+                            const diff = Math.abs(frameData.data[i] - state.lastFrameData.data[i]);
+                            if (diff > 50) score++;
+                        }
+                    }
+                }
+
+                if (score > 8) {
+                    item.caught = true;
+                    handleIndividualHit(item);
+                }
+            });
+            state.lastFrameData = frameData;
+        }
+
+        function handleIndividualHit(target) {
+            state.lastCatchTime = Date.now(); 
+
+            if (target.isCorrect) {
+                sfx.correct();
+                state.score += 10;
+                document.getElementById('score-display').innerText = state.score;
+                showFeedback("BETUL!");
+                triggerConfetti(target.x, target.y);
+                newRound(); 
+                state.targets = []; 
+            } else {
+                sfx.wrong();
+                state.score = Math.max(0, state.score - 5);
+                document.getElementById('score-display').innerText = state.score;
+                
+                const dmg = document.getElementById('damage-overlay');
+                dmg.classList.remove('damage-flash');
+                void dmg.offsetWidth; 
+                dmg.classList.add('damage-flash');
+
+                document.body.classList.remove('shake');
+                void document.body.offsetWidth;
+                document.body.classList.add('shake');
+
+                state.targets = state.targets.filter(t => t !== target);
+            }
+        }
+
+        function showFeedback(text) {
+            const el = document.getElementById('feedback-text');
+            el.querySelector('h1').innerText = text;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 1000);
+        }
+
+        function triggerConfetti(x, y) {
+            for(let i=0; i<30; i++) {
+                state.particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`
+                });
+            }
+        }
+
+        function endGame() {
+            state.isPlaying = false;
+            document.getElementById('game-ui').classList.add('hidden');
+            document.getElementById('game-over-screen').classList.remove('hidden');
+
+            const title = document.getElementById('go-title');
+            const scoreSection = document.getElementById('go-score-section');
+
+            if (state.mode === 'class') {
+                title.innerText = "SYABAS SEMUA!";
+                scoreSection.style.display = 'none';
+            } else {
+                title.innerText = "TAMAT!";
+                scoreSection.style.display = 'block';
+                document.getElementById('final-score').innerText = state.score;
+            }
+        }
+
+        function startTimer() {
+            const int = setInterval(() => {
+                if (!state.isPlaying) { clearInterval(int); return; }
+                state.timeLeft--;
+                document.getElementById('timer-bar').style.width = (state.timeLeft/state.maxTime)*100 + "%";
+                document.getElementById('timer-text').innerText = state.timeLeft + "s";
+                
+                if (state.timeLeft <= 0) {
+                    clearInterval(int);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function gameLoop() {
+            if (!state.isPlaying) return;
+            const ctx = state.ctx;
+            const W = state.canvas.width;
+            const H = state.canvas.height;
+
+            ctx.clearRect(0,0,W,H);
+            
+            ctx.save();
+            ctx.translate(W, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(state.video, 0, 0, W, H);
+            ctx.restore();
+
+            if (state.mode === 'individual') {
+                detectMotion(state.targets);
+
+                if (Date.now() - state.lastSpawnTime > state.spawnRate) {
+                    spawnBubble();
+                    state.lastSpawnTime = Date.now();
+                }
+
+                for (let i = state.targets.length - 1; i >= 0; i--) {
+                    let t = state.targets[i];
+                    if (!t.caught) t.y += state.gameSpeed; 
+
+                    ctx.beginPath();
+                    ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                    ctx.fill();
+                    ctx.lineWidth = 5;
+                    ctx.strokeStyle = t.renderColor;
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#000";
+                    ctx.font = "bold 50px Fredoka";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(t.val, t.x, t.y);
+
+                    if (t.y > H + 60) state.targets.splice(i, 1);
+                }
+
+                for (let i = state.particles.length - 1; i >= 0; i--) {
+                    let p = state.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.02;
+                    ctx.globalAlpha = p.life;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+                    if(p.life <= 0) state.particles.splice(i, 1);
+                }
+
+            } else {
+                const zoneW = W / 3;
+                const zoneH = H * 0.7;
+                const zoneY = H * 0.3;
+
+                state.classOptions.forEach((opt, idx) => {
+                    const x = idx * zoneW;
+                    
+                    let bg = "rgba(255, 255, 255, 0.2)";
+                    let border = "#fff";
+
+                    if (state.quizPhase === 'reveal') {
+                        if (opt.isCorrect) { bg = "rgba(34, 197, 94, 0.6)"; border = "#22c55e"; }
+                        else { bg = "rgba(239, 68, 68, 0.6)"; border = "#ef4444"; }
+                    } else {
+                        // Color border based on operation
+                        const colorMap = { add: '#f97316', subtract: '#ef4444', multiply: '#3b82f6', divide: '#ec4899'};
+                        border = colorMap[state.operation];
+                    }
+
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(x+10, zoneY, zoneW-20, zoneH-10);
+                    ctx.strokeStyle = border;
+                    ctx.lineWidth = 6;
+                    if (state.quizPhase === 'thinking') {
+                        ctx.setLineDash([20, 10]);
+                        ctx.lineDashOffset = -Date.now()/20;
+                    } else {
+                        ctx.setLineDash([]);
+                    }
+                    ctx.strokeRect(x+10, zoneY, zoneW-20, zoneH-10);
+
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 150px Fredoka";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(opt.val, x + zoneW/2, zoneY + zoneH/2);
+                });
+
+                if (state.quizPhase === 'thinking') {
+                    const timeLeft = Math.ceil((state.quizEndTime - Date.now()) / 1000);
+                    
+                    if (timeLeft !== state.lastTick && timeLeft > 0) {
+                        sfx.tick();
+                        state.lastTick = timeLeft;
+                    }
+
+                    // Timer Color based on Op
+                    const colorMap = { add: '#f97316', subtract: '#ef4444', multiply: '#3b82f6', divide: '#ec4899'};
+                    ctx.fillStyle = colorMap[state.operation]; 
+                    ctx.font = "bold 60px Fredoka";
+                    ctx.fillText(timeLeft, W/2, H*0.25); 
+
+                    if (timeLeft <= 0) {
+                        state.quizPhase = 'reveal';
+                        state.quizEndTime = Date.now() + 3000; 
+                        sfx.reveal(); 
+                    }
+                } else if (state.quizPhase === 'reveal') {
+                    if (Date.now() > state.quizEndTime) {
+                        newRound();
+                    }
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize Default Operation
+        selectOperation('add');
+    </script>
+</body>
+</html>

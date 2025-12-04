@@ -73,28 +73,29 @@
                 </div>
             </div>
 
-            <!-- GAME 2: Matematik (Coming Soon) -->
-            <div class="bg-white rounded-3xl overflow-hidden shadow-lg border-4 border-white opacity-80">
-                <div class="bg-orange-100 h-48 flex items-center justify-center">
-                    <i class="fas fa-calculator text-8xl text-orange-300"></i>
+            <!-- GAME 2: Matematik (UNLOCKED) -->
+            <div class="bg-white rounded-3xl overflow-hidden shadow-xl border-4 border-white transition duration-300 card-hover group">
+                <div class="bg-orange-100 h-48 flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-orange-500 opacity-0 group-hover:opacity-10 transition duration-300"></div>
+                    <i class="fas fa-calculator text-8xl text-orange-300 transform group-hover:scale-110 transition duration-300"></i>
                 </div>
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-2">
                         <span class="bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full uppercase">Matematik</span>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-400 mb-2">Kira & Gerak</h3>
-                    <p class="text-gray-400 mb-6 text-sm">
-                        Akan Datang: Permainan operasi tambah dan tolak menggunakan pergerakan fizikal.
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Kira & Gerak</h3>
+                    <p class="text-gray-600 mb-6 text-sm">
+                        Tangkap nombor jawapan untuk <strong>Tambah, Tolak, Darab & Bahagi</strong>. Sesuai untuk individu atau kelas!
                     </p>
                     
-                    <button disabled class="block w-full bg-gray-200 text-gray-400 text-center font-bold py-3 rounded-xl cursor-not-allowed">
-                        <i class="fas fa-lock mr-2"></i> AKAN DATANG
-                    </button>
+                    <a href="matematik.html" class="block w-full bg-orange-500 hover:bg-orange-600 text-white text-center font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">
+                        <i class="fas fa-play mr-2"></i> MULA MAIN
+                    </a>
                 </div>
             </div>
 
             <!-- Add More Games Here in Future -->
-             <div class="border-4 border-dashed border-gray-300 rounded-3xl h-full min-h-[300px] flex flex-col items-center justify-center text-gray-400 p-6">
+             <div class="border-4 border-dashed border-gray-300 rounded-3xl h-full min-h-[300px] flex flex-col items-center justify-center text-gray-400 p-6 opacity-50 hover:opacity-100 transition">
                 <i class="fas fa-plus-circle text-5xl mb-4"></i>
                 <p class="font-bold">Permainan Baru</p>
                 <p class="text-sm">Akan ditambah...</p>

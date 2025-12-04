@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tangkap & Sebut - Pemulihan BM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        .bubble {
+            animation: float 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .pulse-mic {
+            animation: pulse-red 1.5s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Effects Classes */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-4px, 0, 0); }
+            20%, 80% { transform: translate3d(6px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        .flash-green {
+            animation: flashGreen 0.5s;
+        }
+        @keyframes flashGreen {
+            0% { background-color: rgba(34, 197, 94, 0.5); }
+            100% { background-color: transparent; }
+        }
+
+        .flash-red {
+            animation: flashRed 0.5s;
+        }
+        @keyframes flashRed {
+            0% { background-color: rgba(239, 68, 68, 0.5); }
+            100% { background-color: transparent; }
+        }
+
+        /* Timer Bar Animation */
+        .timer-bar {
+            transition: width 1s linear, background-color 1s linear;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center relative">
+
+    <!-- Effects Overlay -->
+    <div id="effects-overlay" class="absolute inset-0 z-30 pointer-events-none"></div>
+
+    <!-- Feedback Text Overlay -->
+    <div id="feedback-text" class="absolute inset-0 z-40 flex items-center justify-center pointer-events-none hidden">
+        <h1 class="text-8xl font-black text-white drop-shadow-lg transform scale-150 transition-all duration-300 stroke-black" style="-webkit-text-stroke: 3px black;">
+            TAHNIAH!
+        </h1>
+    </div>
+
+    <!-- Setup / Menu Screen -->
+    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-100 bg-opacity-95 p-4 text-center overflow-y-auto">
+        <div class="bg-white p-6 rounded-3xl shadow-2xl max-w-lg w-full border-4 border-blue-400 my-4">
+            <h1 class="text-3xl font-bold text-blue-600 mb-1">Tangkap & Belajar!</h1>
+            <p class="text-gray-600 mb-4 text-sm">Sesuai untuk Pemulihan Khas BM</p>
+            
+            <!-- Step 1: Level Selection -->
+            <div class="mb-4">
+                <p class="text-gray-500 font-bold mb-2 text-sm">1. Pilih Kelajuan Buih:</p>
+                <div class="flex justify-center gap-2">
+                    <button onclick="selectLevel('easy')" id="btn-easy" class="level-btn bg-green-500 text-white py-2 px-3 rounded-xl font-bold ring-4 ring-green-300 text-sm">Perlahan</button>
+                    <button onclick="selectLevel('medium')" id="btn-medium" class="level-btn bg-yellow-400 text-white py-2 px-3 rounded-xl font-bold opacity-70 text-sm">Sederhana</button>
+                    <button onclick="selectLevel('hard')" id="btn-hard" class="level-btn bg-red-500 text-white py-2 px-3 rounded-xl font-bold opacity-70 text-sm">Laju</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Skill Selection (Kemahiran Pemulihan) -->
+            <div class="mb-6 text-left">
+                <label class="text-gray-500 font-bold mb-2 text-sm block">2. Pilih Kemahiran Pemulihan:</label>
+                <div class="relative">
+                    <select id="skill-selector" class="block appearance-none w-full bg-blue-50 border-2 border-blue-200 text-gray-700 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:bg-white focus:border-blue-500 font-bold">
+                        <option value="kvkv">K4: KV + KV (Contoh: BOLA)</option>
+                        <option value="vkv">K5: V + KV (Contoh: IBU)</option>
+                        <option value="kvk">K6: KVK (Contoh: JAM)</option>
+                        <option value="kvkvk">K7: KV + KVK (Contoh: GAJAH)</option>
+                        <option value="kvkkv">K8: KVK + KV (Contoh: KUNCI)</option>
+                        <option value="kvkkvk">K9: KVK + KVK (Contoh: RUMPUT)</option>
+                        <!-- NEW SKILLS ADDED BELOW -->
+                        <option value="vkvk">K10: V + KVK (Contoh: EMAS)</option>
+                        <option value="kvkvkv">K11: KV + KV + KV (Contoh: KERUSI)</option>
+                        <option value="kvkvkvk">K12: KV + KV + KVK (Contoh: BASIKAL)</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <i class="fas fa-chevron-down text-blue-500"></i>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-gray-500 font-bold mb-2 text-sm">3. Pilih Mod Permainan:</p>
+            <div class="grid grid-cols-2 gap-4 w-full">
+                <!-- Mod Membaca -->
+                <button onclick="startGame('reading')" class="bg-purple-500 hover:bg-purple-600 text-white text-lg font-bold py-4 px-4 rounded-2xl shadow-lg transform transition hover:scale-105 flex flex-col items-center">
+                    <i class="fas fa-microphone-alt text-3xl mb-2"></i>
+                    <span>MOD MEMBACA</span>
+                    <span class="text-xs font-normal opacity-80 mt-1">(Individu)</span>
+                </button>
+                
+                <!-- Mod Mengenal -->
+                <button onclick="startGame('recognition')" class="bg-orange-500 hover:bg-orange-600 text-white text-lg font-bold py-4 px-4 rounded-2xl shadow-lg transform transition hover:scale-105 flex flex-col items-center">
+                    <i class="fas fa-users text-3xl mb-2"></i>
+                    <span>MOD MENGENAL</span>
+                    <span class="text-xs font-normal opacity-80 mt-1">(Kelas: Lari ke Zon)</span>
+                </button>
+            </div>
+            <p class="mt-4 text-xs text-gray-400">Masa: 45 Saat</p>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80 p-4 text-center">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-lg w-full border-4 border-yellow-400 animate-bounce">
+            <h1 class="text-5xl font-black text-blue-600 mb-4">TAMAT!</h1>
+            <p class="text-gray-500 text-xl">Markah Akhir Anda:</p>
+            <div id="final-score" class="text-8xl font-black text-yellow-500 my-4">0</div>
+            <button onclick="location.reload()" class="bg-green-500 hover:bg-green-600 text-white text-2xl font-bold py-4 px-8 rounded-full shadow-lg transform transition hover:scale-110">
+                Main Lagi <i class="fas fa-redo ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Game UI Overlay -->
+    <div id="game-ui" class="absolute inset-0 z-20 pointer-events-none hidden flex flex-col justify-between p-4">
+        <!-- Top Bar with Timer -->
+        <div class="w-full max-w-3xl mx-auto pointer-events-auto">
+            <div class="flex justify-between items-center mb-2">
+                <div id="score-container" class="bg-white bg-opacity-90 rounded-2xl p-2 px-4 border-4 border-yellow-400 shadow-lg flex items-center gap-3">
+                    <span class="text-yellow-600 font-bold uppercase text-sm">Markah</span>
+                    <span id="score-display" class="text-3xl font-black text-yellow-500">0</span>
+                </div>
+                
+                <div id="mic-status" class="bg-gray-800 bg-opacity-80 text-white px-3 py-1 text-sm rounded-full flex items-center gap-2">
+                    <i class="fas fa-microphone-slash text-red-400"></i>
+                </div>
+            </div>
+            
+            <!-- Timer Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-6 border-2 border-white shadow-md overflow-hidden relative">
+                <div id="timer-bar" class="timer-bar bg-green-500 h-full w-full flex items-center justify-end pr-2">
+                    <span id="timer-text" class="text-xs font-bold text-white shadow-black drop-shadow-md">45s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. SPEECH PROMPT (For Mod Membaca) -->
+        <div id="speak-prompt" class="self-center hidden bg-white bg-opacity-95 p-8 rounded-3xl shadow-2xl border-4 border-green-500 text-center transform scale-110 pointer-events-auto">
+            <p class="text-gray-500 font-bold text-lg mb-2">Sebut Sekarang:</p>
+            <h2 id="prompt-word" class="text-6xl font-black text-green-600 mb-4">BOLA</h2>
+            <div class="w-16 h-16 bg-red-500 rounded-full mx-auto flex items-center justify-center pulse-mic">
+                <i class="fas fa-microphone text-white text-3xl"></i>
+            </div>
+            <p id="listening-text" class="mt-4 text-gray-400 italic h-6">Mendengar...</p>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="flex justify-between items-end">
+            <button onclick="location.reload()" class="pointer-events-auto bg-red-500 hover:bg-red-600 text-white font-bold p-3 rounded-xl shadow-lg opacity-50 hover:opacity-100 transition">
+                <i class="fas fa-stop"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Video Element for processing -->
+    <video id="webcam" style="position: absolute; opacity: 0; pointer-events: none; z-index: -1;" playsinline muted></video>
+    
+    <!-- Main Canvas -->
+    <canvas id="game-canvas" class="absolute inset-0 z-10 w-full h-full object-cover"></canvas>
+
+    <script>
+        // --- EMOJI DATABASE & SKILL LISTS ---
+        
+        const emojiLibrary = {
+            // Existing
+            'BOLA': '⚽', 'BUKU': '📕', 'MEJA': '🪑', 'BAJU': '👕', 'TOPI': '🧢', 
+            'KAKI': '🦶', 'MATA': '👁️', 'GIGI': '🦷', 'ROTI': '🍞', 'SUSU': '🥛', 
+            'SUDU': '🥄', 'LORI': '🚚', 'PAKU': '🔩', 'DADU': '🎲', 'PASU': '🏺', 
+            'RUSA': '🦌', 'JARI': '🖐️', 'FERI': '⛴️', 'GURU': '👨‍🏫', 'LABU': '🎃',
+            'MADU': '🍯', 'NASI': '🍚', 'CILI': '🌶️', 'KOPI': '☕',
+            'IBU': '👩', 'API': '🔥', 'UBI': '🍠', 'ISI': '🥩', 'ALU': '🥣', 
+            'AYAM': '🐔', 'ITIK': '🦆', 'EPAL': '🍎', 'ULAR': '🐍', 'EKOR': '🐈',
+            'EMAS': '🥇', 'AWAN': '☁️', 'IKAN': '🐟', 'OBOR': '🔥', 'OTAK': '🧠',
+            'JAM': '⌚', 'BAS': '🚌', 'BEG': '🎒', 'KEK': '🍰', 'PEN': '🖊️', 
+            'TIN': '🥫', 'POS': '📮', 'GAM': '🧴', 'JUS': '🧃', 'KOT': '🧥',
+            'CAT': '🎨', 'RAK': '🪜', 'VAN': '🚐', 'ZIP': '🤐', 'BOT': '🚤',
+            'GAJAH': '🐘', 'KASUT': '👟', 'RUMAH': '🏠', 'POKOK': '🌳', 'KATAK': '🐸', 
+            'TIKUS': '🐭', 'SIPUT': '🐌', 'BAKUL': '🧺', 'BADUT': '🤡', 'ROBOT': '🤖', 
+            'GITAR': '🎸', 'TELUR': '🥚', 'MULUT': '👄', 'SAYUR': '🥬', 'KAPAL': '🚢',
+            'BADAK': '🦏', 'GELAS': '🥛', 'LILIN': '🕯️', 'POKET': '👖', 'DAPUR': '🍳',
+            'KUNCI': '🔑', 'LEMBU': '🐄', 'BOMBA': '🚒', 'PINTU': '🚪', 'BALDI': '🪣', 
+            'GARPU': '🍴', 'LAMPU': '💡', 'UNTA': '🐫', 'TIMBA': '🪣', 'JAMBU': '🍐',
+            'MANGGA': '🥭', 'PANDA': '🐼', 'TIMUN': '🥒', 'BERUS': '🖌️',
+            'RUMPUT': '🌿', 'CINCIN': '💍', 'BANTAL': '🛌', 'SAMPAN': '🛶', 'BISKUT': '🍪', 
+            'COKLAT': '🍫', 'KAKTUS': '🌵', 'KERTAS': '📄', 'DOKTOR': '👨‍⚕️', 'DOMPET': '👛',
+            'CANTIK': '💅', 'CERMIN': '🪞', 'MASKER': '😷', 'SENDUK': '🥄', 'TANDAS': '🚽',
+
+            // NEW EMOJIS FOR K10, K11, K12
+            'OREN': '🍊', 'ENAM': '6️⃣', 'UBAT': '💊', 'ADIK': '👶', 'ASAP': '💨', 
+            'EKOR': '🐒', 'EPAL': '🍎', 'ITIK': '🦆', 'ULAR': '🐍', 'EMAS': '🥇',
+            'KERUSI': '🪑', 'KELAPA': '🥥', 'TOMATO': '🍅', 'KAMERA': '📷', 'PERAHU': '🛶', 
+            'PELITA': '🪔', 'KEMEJA': '👔', 'KERETA': '🚗', 'KEPALA': '🗣️', 'BONEKA': '🧸',
+            'SEPATU': '👠', 'TELEFON': '📱', 'PETANI': '👨‍🌾', 'MENARA': '🗼', 'DELIMA': '🍒',
+            'BASIKAL': '🚲', 'KETUPAT': '🍙', 'PELANGI': '🌈', 'SEKOLAH': '🏫', 'BELALANG': '🦗',
+            'PEMBARIS': '📏', 'CENDAWAN': '🍄', 'KOMPUTER': '💻', 'JURURAWAT': '👩‍⚕️', 'MATAHARI': '☀️'
+        };
+
+        const skillModules = {
+            'kvkv': ['BOLA', 'BUKU', 'MEJA', 'BAJU', 'TOPI', 'KAKI', 'MATA', 'GIGI', 'ROTI', 'SUSU', 'SUDU', 'LORI', 'PAKU', 'DADU', 'PASU', 'RUSA', 'JARI', 'FERI', 'GURU', 'LABU', 'MADU', 'NASI', 'CILI', 'KOPI'],
+            'vkv': ['IBU', 'API', 'UBI', 'ISI', 'ALU', 'AYAM', 'ITIK', 'EPAL', 'ULAR', 'EKOR', 'EMAS', 'AWAN', 'IKAN', 'OBOR', 'OTAK'],
+            'kvk': ['JAM', 'BAS', 'BEG', 'KEK', 'PEN', 'TIN', 'POS', 'GAM', 'JUS', 'KOT', 'CAT', 'RAK', 'VAN', 'ZIP', 'BOT'],
+            'kvkvk': ['GAJAH', 'KASUT', 'RUMAH', 'POKOK', 'KATAK', 'TIKUS', 'SIPUT', 'BAKUL', 'BADUT', 'ROBOT', 'GITAR', 'TELUR', 'MULUT', 'SAYUR', 'KAPAL', 'BADAK', 'GELAS', 'LILIN', 'POKET', 'DAPUR'],
+            'kvkkv': ['KUNCI', 'LEMBU', 'BOMBA', 'PINTU', 'BALDI', 'GARPU', 'LAMPU', 'UNTA', 'TIMBA', 'JAMBU', 'MANGGA', 'PANDA', 'TIMUN', 'BERUS'],
+            'kvkkvk': ['RUMPUT', 'CINCIN', 'BANTAL', 'SAMPAN', 'BISKUT', 'COKLAT', 'KAKTUS', 'KERTAS', 'DOKTOR', 'DOMPET', 'CANTIK', 'CERMIN', 'MASKER', 'SENDUK', 'TANDAS'],
+            
+            // NEW MODULES ADDED HERE
+            'vkvk': ['OREN', 'ENAM', 'UBAT', 'ADIK', 'ASAP', 'EKOR', 'EPAL', 'ITIK', 'ULAR', 'EMAS'],
+            'kvkvkv': ['KERUSI', 'KELAPA', 'TOMATO', 'KAMERA', 'PERAHU', 'PELITA', 'KEMEJA', 'KERETA', 'KEPALA', 'BONEKA', 'SEPATU', 'PETANI', 'MENARA', 'DELIMA'],
+            'kvkvkvk': ['BASIKAL', 'KETUPAT', 'PELANGI', 'SEKOLAH', 'BELALANG', 'PEMBARIS', 'CENDAWAN', 'TELEFON', 'KOMPUTER', 'MATAHARI']
+        };
+
+        // Game State
+        const state = {
+            score: 0,
+            level: 'easy', 
+            interactionMode: 'catch', // 'catch', 'read', 'quiz'
+            timeLeft: 45, 
+            maxTime: 45,  
+            isPlaying: false,
+            currentWord: null,
+            targets: [],      
+            quizOptions: [],  
+            particles: [], 
+            lastFrameData: null,
+            ctx: null,
+            canvas: null,
+            video: null,
+            recognition: null,
+            lastSpawnTime: 0,
+            spawnRate: 3500,
+            timerInterval: null,
+            activeWords: [],
+            
+            // New Quiz Logic
+            quizPhase: 'idle', // 'thinking', 'reveal'
+            quizEndTime: 0
+        };
+
+        // Level Config
+        const levels = {
+            easy: { speed: 1.5, spawn: 3500 },
+            medium: { speed: 3.5, spawn: 2500 },
+            hard: { speed: 6.0, spawn: 1200 }
+        };
+
+        // Audio System
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const playTone = (freq, type, duration) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        };
+
+        const soundEffects = {
+            pop: () => playTone(600, 'sine', 0.1),
+            correct: () => {
+                playTone(523.25, 'sine', 0.1); 
+                setTimeout(() => playTone(659.25, 'sine', 0.1), 100); 
+                setTimeout(() => playTone(783.99, 'sine', 0.4), 200); 
+            },
+            wrong: () => {
+                playTone(150, 'sawtooth', 0.2);
+                setTimeout(() => playTone(100, 'sawtooth', 0.4), 150);
+            },
+            tick: () => playTone(800, 'square', 0.05)
+        };
+
+        // --- Functions ---
+
+        function selectLevel(lvl) {
+            state.level = lvl;
+            state.spawnRate = levels[lvl].spawn;
+            
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-green-300', 'opacity-100');
+                btn.classList.add('opacity-70');
+            });
+            const activeBtn = document.getElementById('btn-' + lvl);
+            activeBtn.classList.remove('opacity-70');
+            activeBtn.classList.add('opacity-100', 'ring-4', 'ring-green-300');
+        }
+
+        async function startGame(mode) {
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+            state.interactionMode = 'catch'; 
+            state.score = 0;
+            state.timeLeft = 45;
+            state.targets = [];
+            state.quizOptions = [];
+            document.getElementById('score-display').innerText = 0;
+
+            const skillKey = document.getElementById('skill-selector').value;
+            let words = skillModules[skillKey];
+
+            if (mode === 'recognition') {
+                const supportedWords = words.filter(w => emojiLibrary[w]);
+                if (supportedWords.length < 3) {
+                    alert("Maaf, kemahiran ini kekurangan gambar untuk Mod Mengenal. Sila pilih Mod Membaca.");
+                    return; 
+                } else {
+                    words = supportedWords;
+                }
+                // Hide Score for recognition mode
+                document.getElementById('score-container').style.display = 'none';
+            } else {
+                document.getElementById('score-container').style.display = 'flex';
+            }
+            state.activeWords = words;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            
+            if (mode === 'reading') {
+                document.getElementById('mic-status').innerHTML = '<i class="fas fa-microphone text-green-400"></i>';
+                document.getElementById('mic-status').classList.remove('bg-gray-800');
+                document.getElementById('mic-status').classList.add('bg-green-900');
+            } else {
+                document.getElementById('mic-status').innerHTML = '<i class="fas fa-users text-orange-400"></i>';
+                document.getElementById('mic-status').classList.remove('bg-gray-800');
+                document.getElementById('mic-status').classList.add('bg-orange-900');
+            }
+            
+            await setupCamera();
+            if (mode === 'reading') setupSpeech();
+            
+            state.canvas = document.getElementById('game-canvas');
+            state.ctx = state.canvas.getContext('2d');
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            state.isPlaying = true;
+            
+            startTimer();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startTimer() {
+            state.timerInterval = setInterval(() => {
+                // In quiz mode, only count down game time if we are catching (not during the quiz itself)
+                if (!state.isPlaying) return;
+                
+                // Pause main game timer while quiz is active so game doesn't end abruptly
+                if (state.interactionMode === 'quiz') return;
+
+                state.timeLeft--;
+                
+                const percentage = (state.timeLeft / state.maxTime) * 100;
+                const bar = document.getElementById('timer-bar');
+                const text = document.getElementById('timer-text');
+                
+                bar.style.width = percentage + '%';
+                text.innerText = state.timeLeft + 's';
+
+                if (state.timeLeft <= 10) {
+                    bar.classList.remove('bg-green-500', 'bg-yellow-400');
+                    bar.classList.add('bg-red-500');
+                } else if (state.timeLeft <= 20) {
+                    bar.classList.remove('bg-green-500');
+                    bar.classList.add('bg-yellow-400');
+                }
+
+                if (state.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            state.isPlaying = false;
+            clearInterval(state.timerInterval);
+            try { if(state.recognition) state.recognition.stop(); } catch(e){}
+            
+            document.getElementById('final-score').innerText = state.score;
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            document.getElementById('game-ui').classList.add('hidden');
+        }
+
+        async function setupCamera() {
+            const video = document.getElementById('webcam');
+            state.video = video;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480, facingMode: 'user' }, 
+                    audio: false 
+                });
+                video.srcObject = stream;
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        const playPromise = video.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(_ => resolve()).catch(error => { console.log("Auto-play prevented"); resolve(); });
+                        } else { resolve(); }
+                    };
+                });
+            } catch (err) { alert("Ralat Kamera"); }
+        }
+
+        function setupSpeech() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                state.recognition = new SpeechRecognition();
+                state.recognition.lang = 'ms-MY'; 
+                state.recognition.continuous = false;
+                state.recognition.interimResults = false;
+
+                state.recognition.onend = () => {
+                    if (state.interactionMode === 'read') { 
+                        try { state.recognition.start(); } catch(e){}
+                    }
+                };
+
+                state.recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript.toUpperCase();
+                    document.getElementById('listening-text').innerText = `Dengar: "${transcript}"`;
+                    checkReadingAnswer(transcript);
+                };
+            }
+        }
+
+        function resizeCanvas() {
+            state.canvas.width = window.innerWidth;
+            state.canvas.height = window.innerHeight;
+        }
+
+        function spawnTarget() {
+            const text = state.activeWords[Math.floor(Math.random() * state.activeWords.length)];
+            const width = state.canvas.width;
+            
+            let x;
+            if (Math.random() > 0.5) {
+                x = Math.random() * (width * 0.3) + 60; 
+            } else {
+                x = width - (Math.random() * (width * 0.3) + 60); 
+            }
+
+            let fontSize = 40; 
+            if (state.ctx) {
+                state.ctx.font = `bold ${fontSize}px Fredoka`;
+                while (state.ctx.measureText(text).width > 90 && fontSize > 14) {
+                    fontSize -= 2;
+                    state.ctx.font = `bold ${fontSize}px Fredoka`;
+                }
+            }
+
+            state.targets.push({
+                x: x,
+                y: -50,
+                radius: 60,
+                text: text,
+                fontSize: fontSize,
+                color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                caught: false,
+                id: Math.random() 
+            });
+        }
+
+        function handleCatch(target) {
+            state.currentWord = target;
+            soundEffects.pop();
+
+            if (document.getElementById('mic-status').innerHTML.includes('microphone')) {
+                state.interactionMode = 'read';
+                activateVoicePrompt(target);
+            } else {
+                state.interactionMode = 'quiz';
+                activateWholeClassQuiz(target);
+            }
+        }
+
+        function activateVoicePrompt(target) {
+            document.getElementById('prompt-word').innerText = target.text;
+            document.getElementById('listening-text').innerText = "Mendengar...";
+            document.getElementById('listening-text').classList.remove('text-red-400');
+            document.getElementById('speak-prompt').classList.remove('hidden');
+            try { state.recognition.start(); } catch (e) {}
+        }
+
+        function checkReadingAnswer(spokenWord) {
+            if (!state.currentWord) return;
+            if (spokenWord.includes(state.currentWord.text) || state.currentWord.text.includes(spokenWord)) {
+                handleSuccess();
+            } else {
+                handleFailure();
+            }
+        }
+
+        // --- WHOLE CLASS QUIZ LOGIC ---
+        function activateWholeClassQuiz(target) {
+            const w = state.canvas.width;
+            const h = state.canvas.height;
+            const correctEmoji = emojiLibrary[target.text];
+
+            const allEmojis = Object.values(emojiLibrary);
+            const distractors = [];
+            while(distractors.length < 2) {
+                const rand = allEmojis[Math.floor(Math.random() * allEmojis.length)];
+                if (rand !== correctEmoji && !distractors.includes(rand)) {
+                    distractors.push(rand);
+                }
+            }
+            
+            // Randomize and assign Left(0), Center(1), Right(2)
+            const options = [
+                { emoji: correctEmoji, isCorrect: true },
+                { emoji: distractors[0], isCorrect: false },
+                { emoji: distractors[1], isCorrect: false }
+            ].sort(() => Math.random() - 0.5);
+
+            options[0].zone = 0; options[0].label = "ZON KIRI";
+            options[1].zone = 1; options[1].label = "ZON TENGAH";
+            options[2].zone = 2; options[2].label = "ZON KANAN";
+
+            state.quizOptions = options;
+            
+            // Start Thinking Phase (5 seconds)
+            state.quizPhase = 'thinking';
+            state.quizEndTime = Date.now() + 5000; 
+        }
+
+        function handleQuizTimer() {
+            const timeLeft = state.quizEndTime - Date.now();
+
+            if (state.quizPhase === 'thinking') {
+                if (timeLeft <= 0) {
+                    // Transition to Reveal
+                    state.quizPhase = 'reveal';
+                    // FIX: Reduced waiting time after answer is shown (5000 -> 3000)
+                    state.quizEndTime = Date.now() + 3000; 
+                    soundEffects.pop(); // Sound indicator
+                }
+            } else if (state.quizPhase === 'reveal') {
+                if (timeLeft <= 0) {
+                    // End quiz
+                    resumeGame(true);
+                }
+            }
+        }
+
+        // --- COMMON LOGIC ---
+        function handleSuccess() {
+            soundEffects.correct();
+            state.score += 10;
+            document.getElementById('score-display').innerText = state.score;
+            triggerEffect('correct');
+            resumeGame(true);
+        }
+
+        function handleFailure() {
+            soundEffects.wrong();
+            state.score = Math.max(0, state.score - 5);
+            document.getElementById('score-display').innerText = state.score;
+            triggerEffect('wrong');
+            resumeGame(true);
+        }
+
+        function resumeGame(removeCurrent) {
+            document.getElementById('speak-prompt').classList.add('hidden');
+            
+            if (removeCurrent && state.currentWord) {
+                state.targets = state.targets.filter(t => t.id !== state.currentWord.id);
+            }
+            
+            state.quizOptions = []; 
+            state.currentWord = null;
+            state.interactionMode = 'catch'; 
+            state.quizPhase = 'idle';
+            try { if(state.recognition) state.recognition.stop(); } catch(e){}
+        }
+
+        function triggerEffect(type) {
+            const overlay = document.getElementById('effects-overlay');
+            const feedbackText = document.getElementById('feedback-text');
+            const feedbackH1 = feedbackText.querySelector('h1');
+
+            if (type === 'correct') {
+                overlay.className = 'absolute inset-0 z-30 pointer-events-none flash-green';
+                setTimeout(() => overlay.className = 'absolute inset-0 z-30 pointer-events-none', 500);
+                feedbackH1.innerText = "TAHNIAH!";
+                feedbackH1.className = "text-8xl font-black text-green-400 drop-shadow-lg transform scale-150 transition-all duration-300 stroke-black";
+                feedbackText.classList.remove('hidden');
+                setTimeout(() => feedbackText.classList.add('hidden'), 1000);
+            } else {
+                overlay.className = 'absolute inset-0 z-30 pointer-events-none flash-red';
+                setTimeout(() => overlay.className = 'absolute inset-0 z-30 pointer-events-none', 500);
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 500);
+                feedbackH1.innerText = "SALAH!";
+                feedbackH1.className = "text-8xl font-black text-red-500 drop-shadow-lg transform scale-150 transition-all duration-300 stroke-black";
+                feedbackText.classList.remove('hidden');
+                setTimeout(() => feedbackText.classList.add('hidden'), 1000);
+            }
+        }
+
+        // --- MOTION DETECTION (CATCH ONLY) ---
+        function detectMotion(items) {
+             const w = 64; const h = 48;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w; tempCanvas.height = h;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(state.video, 0, 0, w, h);
+            const frameData = tempCtx.getImageData(0, 0, w, h);
+
+            if (!state.lastFrameData) { state.lastFrameData = frameData; return; }
+
+            items.forEach(item => {
+                if (item.caught) return;
+                const relativeX = item.x / state.canvas.width;
+                const relativeY = item.y / state.canvas.height;
+                const videoX = Math.floor((1 - relativeX) * w); 
+                const videoY = Math.floor(relativeY * h);
+
+                let motionScore = 0;
+                const range = 4;
+                for(let cy = videoY - range; cy < videoY + range; cy++) {
+                    for(let cx = videoX - range; cx < videoX + range; cx++) {
+                        if(cx >=0 && cx < w && cy >= 0 && cy < h) {
+                            const pos = (cy * w + cx) * 4;
+                            const diff = Math.abs(frameData.data[pos] - state.lastFrameData.data[pos]);
+                            if(diff > 60) motionScore++;
+                        }
+                    }
+                }
+                
+                if(motionScore > 6) {
+                    item.caught = true; 
+                    handleCatch(item);
+                }
+            });
+            state.lastFrameData = frameData; 
+        }
+
+        function gameLoop(timestamp) {
+            if (!state.isPlaying) return;
+
+            state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
+
+            // 1. Draw Video
+            state.ctx.save();
+            state.ctx.translate(state.canvas.width, 0);
+            state.ctx.scale(-1, 1);
+            state.ctx.drawImage(state.video, 0, 0, state.canvas.width, state.canvas.height);
+            state.ctx.restore();
+
+            if (state.interactionMode === 'catch') {
+                detectMotion(state.targets);
+                
+                if (timestamp - state.lastSpawnTime > state.spawnRate) {
+                    spawnTarget();
+                    state.lastSpawnTime = timestamp;
+                }
+
+                const currentSpeed = levels[state.level].speed;
+                for (let i = state.targets.length - 1; i >= 0; i--) {
+                    let t = state.targets[i];
+                    if (!t.caught) t.y += currentSpeed;
+                    
+                    state.ctx.beginPath();
+                    state.ctx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+                    state.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    state.ctx.fill();
+                    state.ctx.lineWidth = 4;
+                    state.ctx.strokeStyle = t.color;
+                    state.ctx.stroke();
+                    
+                    state.ctx.fillStyle = t.color;
+                    state.ctx.font = `bold ${t.fontSize}px Fredoka`;
+                    state.ctx.textAlign = "center";
+                    state.ctx.textBaseline = "middle";
+                    state.ctx.fillText(t.text, t.x, t.y);
+
+                    if (t.y > state.canvas.height + 60) state.targets.splice(i, 1);
+                }
+
+            } else if (state.interactionMode === 'quiz') {
+                handleQuizTimer();
+
+                // FIX: Ensure state didn't change (answer selected), otherwise continue loop
+                if (state.interactionMode === 'quiz' && state.currentWord) {
+
+                    // Dark Overlay
+                    state.ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+                    state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+
+                    // Prompt
+                    state.ctx.fillStyle = "#ffffff";
+                    state.ctx.font = "bold 50px Fredoka";
+                    state.ctx.textAlign = "center";
+                    state.ctx.fillText("Cari: " + state.currentWord.text, state.canvas.width/2, state.canvas.height * 0.20);
+
+                    // Draw Zones & Options
+                    const zoneWidth = state.canvas.width / 3;
+                    // FIX: Made zones taller and start higher up
+                    const zoneY = state.canvas.height * 0.3; 
+                    const zoneHeight = state.canvas.height * 0.7;
+
+                    state.quizOptions.forEach((opt, idx) => {
+                        const x = idx * zoneWidth;
+                        
+                        // Draw Box Area
+                        let bgStyle = "rgba(255, 255, 255, 0.1)";
+                        let borderStyle = "#ffffff";
+                        let isAnimated = false;
+
+                        if (state.quizPhase === 'thinking') {
+                            isAnimated = true;
+                            bgStyle = "rgba(255, 255, 255, 0.15)";
+                        } else if (state.quizPhase === 'reveal') {
+                            if (opt.isCorrect) {
+                                bgStyle = "rgba(34, 197, 94, 0.5)"; // Green
+                                borderStyle = "#22c55e";
+                            } else {
+                                bgStyle = "rgba(239, 68, 68, 0.5)"; // Red
+                                borderStyle = "#ef4444";
+                            }
+                        }
+
+                        state.ctx.save();
+
+                        // 1. Draw Background
+                        state.ctx.fillStyle = bgStyle;
+                        state.ctx.fillRect(x + 5, zoneY, zoneWidth - 10, zoneHeight - 10);
+
+                        // 2. Draw Animated Border
+                        if (isAnimated) {
+                            state.ctx.strokeStyle = "#FCD34D"; // Bright Yellow
+                            state.ctx.lineWidth = 8;
+                            state.ctx.setLineDash([25, 15]); 
+                            state.ctx.lineDashOffset = -(Date.now() / 15) % 40; 
+                            state.ctx.shadowColor = "#F59E0B";
+                            state.ctx.shadowBlur = 25;
+                        } else {
+                            state.ctx.strokeStyle = borderStyle;
+                            state.ctx.lineWidth = 6;
+                            state.ctx.setLineDash([]); 
+                            state.ctx.shadowBlur = 0;
+                        }
+
+                        state.ctx.strokeRect(x + 5, zoneY, zoneWidth - 10, zoneHeight - 10);
+                        
+                        state.ctx.restore();
+
+                        // Draw Emoji in Center of Zone
+                        state.ctx.fillStyle = "#ffffff";
+                        // FIX: Increased Emoji Size (100px -> 160px)
+                        state.ctx.font = "160px Arial";
+                        state.ctx.textAlign = "center";
+                        state.ctx.textBaseline = "middle";
+                        state.ctx.fillText(opt.emoji, x + zoneWidth/2, zoneY + zoneHeight/2);
+                        
+                        // Zone Label
+                        state.ctx.font = "bold 24px Fredoka";
+                        state.ctx.fillText(opt.label, x + zoneWidth/2, zoneY + 40);
+                    });
+
+                    // Countdown Logic
+                    if (state.quizPhase === 'thinking') {
+                        const secondsLeft = Math.ceil((state.quizEndTime - Date.now()) / 1000);
+                        
+                        // Draw Big Countdown Center
+                        state.ctx.fillStyle = "#F59E0B"; // Orange
+                        state.ctx.font = "bold 100px Fredoka";
+                        state.ctx.fillText(secondsLeft, state.canvas.width/2, state.canvas.height * 0.15);
+                        
+                        state.ctx.font = "bold 40px Fredoka";
+                        state.ctx.fillStyle = "#ffffff";
+                        // Adjusted position slightly for better visibility
+                        state.ctx.fillText("Lari ke zon yang betul!", state.canvas.width/2, state.canvas.height * 0.95);
+                    }
+                }
+            } else if (state.interactionMode === 'read') {
+                state.ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+                state.ctx.fillRect(0, 0, state.canvas.width, state.canvas.height);
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>

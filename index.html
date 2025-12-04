@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Permainan Pemulihan Khas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-500 text-white p-2 rounded-lg">
+                    <i class="fas fa-gamepad text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-blue-600 leading-none">Portal Cikgu</h1>
+                    <p class="text-xs text-gray-500 font-semibold">Pemulihan Khas & Prasekolah</p>
+                </div>
+            </div>
+            <a href="#" class="text-gray-500 hover:text-blue-500"><i class="fas fa-info-circle text-xl"></i></a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="max-w-6xl mx-auto px-4 py-12 text-center">
+        <h1 class="text-5xl md:text-6xl font-black text-gray-800 mb-4">
+            Belajar Sambil <span class="text-blue-500">Bermain!</span>
+        </h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+            Pilih permainan di bawah untuk memulakan sesi pembelajaran interaktif menggunakan kamera dan suara.
+        </p>
+    </header>
+
+    <!-- Game Grid -->
+    <main class="max-w-6xl mx-auto px-4 pb-20">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <!-- GAME 1: Tangkap & Sebut (Link to tangkap.html) -->
+            <div class="bg-white rounded-3xl overflow-hidden shadow-xl border-4 border-white transition duration-300 card-hover group">
+                <div class="bg-purple-100 h-48 flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-10 transition duration-300"></div>
+                    <i class="fas fa-hand-sparkles text-8xl text-purple-400 transform group-hover:scale-110 transition duration-300"></i>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="bg-purple-100 text-purple-600 text-xs font-bold px-3 py-1 rounded-full uppercase">Bahasa Melayu</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Tangkap & Sebut</h3>
+                    <p class="text-gray-600 mb-6 text-sm">
+                        Permainan interaktif menggunakan webcam. Tangkap buih kata dan sebut dengan kuat, atau lari ke zon jawapan yang betul!
+                    </p>
+                    
+                    <a href="tangkap.html" class="block w-full bg-purple-500 hover:bg-purple-600 text-white text-center font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">
+                        <i class="fas fa-play mr-2"></i> MULA MAIN
+                    </a>
+                </div>
+            </div>
+
+            <!-- GAME 2: Matematik (Coming Soon) -->
+            <div class="bg-white rounded-3xl overflow-hidden shadow-lg border-4 border-white opacity-80">
+                <div class="bg-orange-100 h-48 flex items-center justify-center">
+                    <i class="fas fa-calculator text-8xl text-orange-300"></i>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full uppercase">Matematik</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-400 mb-2">Kira & Gerak</h3>
+                    <p class="text-gray-400 mb-6 text-sm">
+                        Akan Datang: Permainan operasi tambah dan tolak menggunakan pergerakan fizikal.
+                    </p>
+                    
+                    <button disabled class="block w-full bg-gray-200 text-gray-400 text-center font-bold py-3 rounded-xl cursor-not-allowed">
+                        <i class="fas fa-lock mr-2"></i> AKAN DATANG
+                    </button>
+                </div>
+            </div>
+
+            <!-- Add More Games Here in Future -->
+             <div class="border-4 border-dashed border-gray-300 rounded-3xl h-full min-h-[300px] flex flex-col items-center justify-center text-gray-400 p-6">
+                <i class="fas fa-plus-circle text-5xl mb-4"></i>
+                <p class="font-bold">Permainan Baru</p>
+                <p class="text-sm">Akan ditambah...</p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white py-8 mt-auto border-t">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm">
+                &copy; 2023 Portal Pembelajaran Pemulihan. Dibina untuk Cikgu & Murid.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
